@@ -1,1 +1,2 @@
 tvagg filter=lfs diff=lfs merge=lfs -text
+*.NASDAQ_ITCH50 filter=lfs diff=lfs merge=lfs -text

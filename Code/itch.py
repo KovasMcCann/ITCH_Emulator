@@ -55,7 +55,7 @@ m_map = {
 }
 
 # Define the path to the binary file
-file_name = "../Data/tvagg"
+file_name = "../Data/01302019.NASDAQ_ITCH50"
 
 data = open(os.path.join(file_name), 'rb') #sets to ready binary
 
