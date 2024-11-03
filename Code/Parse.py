@@ -1,6 +1,7 @@
 # NASDAQ ITCH 5.0 Parser
 
 import struct
+import datetime
 
 # Define the mapping of message types to their lengths
 m_map = {
@@ -34,6 +35,10 @@ def decodeTimestamp(timestamp):
     new_timestamp = struct.unpack('>Q', new_bytes)
     return new_timestamp[0]
 
+def nanosecondsToTime(nanoseconds):
+    return datetime.datetime.utcfromtimestamp(nanoseconds/1e9).strftime('%H:%M:%S')
+
+
 #file = '../Data/01302019.NASDAQ_ITCH50'
 
 import argparse
@@ -57,30 +62,40 @@ with open(file, 'rb') as f:
 
         # Read the rest of the message based on the size
         record = f.read(message_size - 1)
-        print(message_size, message_type, record)
+        #print(message_size, message_type, record)
 
         if message_type == "S": # System Event Messages
             unpacked_data = struct.unpack('>HH6sc', record)
+            print(unpacked_data)
             if unpacked_data[3].decode() == "Q":  # Start of Market hours
                 openTime = decodeTimestamp(unpacked_data[2])
-                print("Market opened at %d nanoseconds: " % openTime)
-            
+                print(f"Market opened at {nanosecondsToTime(openTime)}")
+
             elif unpacked_data[3].decode() == "M":  # End of Market hours
                 endTime = decodeTimestamp(unpacked_data[2])
-                print("Market closed at %d nanoseconds: " % endTime)
+                print(f"Market closed at {nanosecondsToTime(endTime)}")
 
             elif unpacked_data[3].decode() == "S": # Start of System Hours 
                 openTime = decodeTimestamp(unpacked_data[2])
-                print("System Started at %d nanoseconds: " % openTime)
+                print(f"System Started at {nanosecondsToTime(openTime)}")
 
             elif unpacked_data[3].decode() == "E": # End of System Hours
                 endTime = decodeTimestamp(unpacked_data[2])
-                print("System Started at %d nanoseconds: " % endTime)
+                print(f"System Stopped at {nanosecondsToTime(endTime)}")
 
-            elif message_type == "O": # Start of Messages
+            elif unpacked_data[3].decode() == "O": # Start of Messages
                 openTime = decodeTimestamp(unpacked_data[2])
-                print("Start of Messages at %d nanoseconds: " % openTime)
+                print(f"Start of Messages at {nanosecondsToTime(openTime)}")
 
-            elif message_type == "C": # End of Messages
-                openTime = decodeTimestamp(unpacked_data[2])
-                print("End of Messages at %d nanoseconds: " % openTime)
+            elif unpacked_data[3].decode() == "C": # End of Messages
+                endTime = decodeTimestamp(unpacked_data[2])
+                print(f"End of Messages at {nanosecondsToTime(endTime)}")
+
+        elif message_type == "R": # Stock Directory Messages
+            data = struct.unpack('>HH6s8sccIcc2scccccIc', record)
+            print(data)
+            stockID = data[0]
+            # Converts to string, removes trailing spaces
+            ticker = data[3].decode().strip()
+            print(f"Stock {stockID} added with ticker {ticker}")
+            #stock_map[stockID] = ticker
