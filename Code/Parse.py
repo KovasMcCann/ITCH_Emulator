@@ -29,6 +29,18 @@ m_map = {
     "n": 19   # rpii message
 }
 
+MarketCategory = { # For Stock Directory Messages
+    "Q": "NASDAQ Global Select Market",
+    "G": "NASDAQ Global Market",
+    "S": "NASDAQ Capital Market",
+    "N": "New York Stock Exchange",
+    "A": "NYSE MKT",
+    "P": "NYSE Arca",
+    "Z": "BATS Global Markets",
+    "V": "Investors Exchange",
+    " ": "Not Available"
+}
+
 def decodeTimestamp(timestamp):
     # Given a 6 byte integer, returns an 8 bit unsigned long long
     new_bytes = struct.pack('>2s6s', b'\x00\x00', timestamp)  # Add padding bytes
@@ -92,10 +104,15 @@ with open(file, 'rb') as f:
                 print(f"End of Messages at {nanosecondsToTime(endTime)}")
 
         elif message_type == "R": # Stock Directory Messages
+
+
             data = struct.unpack('>HH6s8sccIcc2scccccIc', record)
-            print(data)
+            #print(data)
             stockID = data[0]
             # Converts to string, removes trailing spaces
             ticker = data[3].decode().strip()
-            print(f"Stock {stockID} added with ticker {ticker}")
+            market = MarketCategory[data[4].decode()]
+            print(f"Stock {stockID} added with ticker {ticker} for {market}")
             #stock_map[stockID] = ticker
+        import time
+        time.sleep(0.1)
