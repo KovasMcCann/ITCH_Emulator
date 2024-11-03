@@ -1,74 +1,65 @@
-## project:
-# Create a converter to convert itch data to SoupBinTCP format
-# Create a parser to read the SoupBinTCP format
-## References
-# https://www.nyse.com/publicdocs/nyse/data/Daily_TAQ_Client_Spec_v3.0.pdf
-# https://www.nyse.com/publicdocs/nyse/data/Daily_TAQ_ArcaBook_Client_Spec_v2.0.pdf
-# https://www.nyse.com/publicdocs/nyse/data/Daily_TAQ_NASDAQ_Client_Spec_v2.2.pdf
-# https://www.nyse.com/publicdocs/nyse/data/Daily_TAQ_NASDAQ_OMX_Client_Spec_v1.2.pdf
-# https://www.nyse.com/publicdocs/nyse/data/Daily_TAQ_NYSE_Client_Spec_v2.0.pdf
-# https://www.nyse.com/publicdocs/nyse/data/Daily_TAQ_NYSE_Arca_Client_Spec_v2.0.pdf
+import struct
 
-# https://wiki.wireshark.org/SoupBinTCP
-# also setup wireshark to monitor the packets
-
-"""
-import scapy
-
-##SoupBinTCP
-class Disney(Packet):
-    name = "DisneyPacket "
-    fields_desc=[ ShortField("mickey",5),
-                 XByteField("minnie",3) ,
-                 IntEnumField("donald" , 1 ,
-                      { 1: "happy", 2: "cool" , 3: "angry" } ) ]
-    
-#prase the packet
-"""
-
-import os
-
-# This defines the message types and their lengths
+# Define the mapping of message types to their lengths
 m_map = {
-    "S": 11,  # System messages, important to set start/stop timestamps
-    "R": 38,  # Stock Directory, use to set keys in map of stocks map
-    "H": 24,  # Stock Trading Action
-    "Y": 19,  # Reg SHO Restriction
-    "L": 25,  # Market Participant Position
-    "V": 34,  # MWCB Decline Level Message
-    "W": 11,  # MWCB Status Message
-    "K": 27,  # IPO Quoting Period Update
-    "J": 34,  # LULD Auction Collar
-    "h": 20,  # Operational Halt
-    "A": 35,  # Added orders
-    "F": 39,  # Added orders with MPID Attribution
-    "E": 30,  # Executed orders, linked to the previously added orders
-    "C": 35,  # Executed orders without linked added orders
-    "X": 22,  # Order Cancel
-    "D": 18,  # Order Delete
-    "U": 34,  # Modifications to added orders
-    "P": 43,  # Undisplayable non-cross orders executed
-    "Q": 39,  # Cross Trade
-    "B": 18,  # Broken Trade
-    "I": 49,  # NOII message
-    "N": 19   # RPII message
+    "s": 11,  # system messages, important to set start/stop timestamps
+    "r": 38,  # stock directory
+    "h": 24,  # stock trading action
+    "y": 19,  # reg sho restriction
+    "l": 25,  # market participant position
+    "v": 34,  # mwcb decline level message
+    "w": 11,  # mwcb status message
+    "k": 27,  # ipo quoting period update
+    "j": 34,  # luld auction collar
+    "h": 20,  # operational halt
+    "a": 35,  # added orders
+    "f": 39,  # added orders with mpid attribution
+    "e": 30,  # executed orders, linked to the previously added orders
+    "c": 35,  # executed orders without linked added orders
+    "x": 22,  # order cancel
+    "d": 18,  # order delete
+    "u": 34,  # modifications to added orders
+    "p": 43,  # undisplayable non-cross orders executed
+    "q": 39,  # cross trade_data
+    "b": 18,  # broken trade
+    "i": 49,  # noii message
+    "n": 19   # rpii message
 }
 
-# Define the path to the binary file
-file_name = "../Data/01302019.NASDAQ_ITCH50"
+file = '../Data/01302019.NASDAQ_ITCH50'
 
-data = open(os.path.join(file_name), 'rb') #sets to ready binary
+def decodeTimestamp(timestamp):
+    # Given a 6 byte integer, returns an 8 bit unsigned long long
+    new_bytes = struct.pack('>2s6s', b'\x00\x00', timestamp)  # Add padding bytes
+    new_timestamp = struct.unpack('>Q', new_bytes)
+    return new_timestamp[0]
 
-# Read the message header
-msg_header = data.read(1) #Does this need to be 0?  # Reads one byte
-print(msg_header)
+with open(file, 'rb') as f:
+    while True:
+        # Read the message size (2 bytes)
+        size_data = f.read(2)
+        if not size_data:
+            break
 
-if msg_header == b"S":
-    print("System Event Message")
-    msg_type = "S"
-    msg_len = m_map[msg_type]
-    msg_data = data.read(msg_len - 1)
-    print(msg_data)
+        # Convert the size to an integer
+        message_size = int.from_bytes(size_data, byteorder='big', signed=False)
 
-# Close the binary file after reading
-data.close()
+        # Read the message type (1 byte)
+        message_type = f.read(1).decode('ascii')
+
+        # Read the rest of the message based on the size
+        record = f.read(message_size - 1)
+        print(message_size, message_type, record)
+
+        if message_type == "S":
+            unpacked_data = struct.unpack('>HH6sc', record)
+            if unpacked_data[3].decode() == "Q":  # Start of Market hours
+                openTime = decodeTimestamp(unpacked_data[2])
+                print("Market opened at %d nanoseconds: " % openTime)
+                import time
+                time.sleep(5)
+            elif unpacked_data[3].decode() == "M":  # End of Market hours
+                endTime = decodeTimestamp(unpacked_data[2])
+                print("Market closed at %d nanoseconds: " % endTime)
+                import time
+                time.sleep(5)
