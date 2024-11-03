@@ -16,7 +16,7 @@ def draw_window(win, title, numbers):
     win.clear()
     win.box()  # Add border
     win.addstr(0, 1, title)  # Title inside the border
-    for i, num in enumerate(numbers[-10:]):  # Display the last 10 numbers
+    for i, num in enumerate(numbers):  # Display all numbers
         if is_prime(num):
             win.addstr(i + 1, 1, f"{num}", curses.A_BOLD | curses.color_pair(1))
         else:
@@ -42,16 +42,16 @@ def main(stdscr):
 
             # Create two windows, split evenly in width
             win1 = curses.newwin(win_height, win_width, 1, 1)  # Window 1
-            win2 = curses.newwin(win_height, win_width, 1, win_width + 1)  # Window 2
+            win2 = curses.newwin(win_height, win_width, 1, win_width - 1)  # Window 2
 
             # Add new random number to each feed
             numbers1.append(random.randint(1, 100))
             numbers2.append(random.randint(1, 100))
 
-            # Keep only the last 50 numbers for scrolling
-            if len(numbers1) > 50:
+            # Keep only the last `win_height` numbers for scrolling
+            if len(numbers1) > win_height - 2:  # Exclude title row
                 numbers1.pop(0)
-            if len(numbers2) > 50:
+            if len(numbers2) > win_height - 2:
                 numbers2.pop(0)
 
             draw_window(win1, "SoupBinTCP Packets", numbers1)
