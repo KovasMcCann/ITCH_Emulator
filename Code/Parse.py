@@ -1,3 +1,5 @@
+# NASDAQ ITCH 5.0 Parser
+
 import struct
 
 # Define the mapping of message types to their lengths
@@ -26,13 +28,19 @@ m_map = {
     "n": 19   # rpii message
 }
 
-file = '../Data/01302019.NASDAQ_ITCH50'
-
 def decodeTimestamp(timestamp):
     # Given a 6 byte integer, returns an 8 bit unsigned long long
     new_bytes = struct.pack('>2s6s', b'\x00\x00', timestamp)  # Add padding bytes
     new_timestamp = struct.unpack('>Q', new_bytes)
     return new_timestamp[0]
+
+#file = '../Data/01302019.NASDAQ_ITCH50'
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("file", help="The file to process")
+args = parser.parse_args()
+file = args.file
 
 with open(file, 'rb') as f:
     while True:
@@ -51,15 +59,28 @@ with open(file, 'rb') as f:
         record = f.read(message_size - 1)
         print(message_size, message_type, record)
 
-        if message_type == "S":
+        if message_type == "S": # System Event Messages
             unpacked_data = struct.unpack('>HH6sc', record)
             if unpacked_data[3].decode() == "Q":  # Start of Market hours
                 openTime = decodeTimestamp(unpacked_data[2])
                 print("Market opened at %d nanoseconds: " % openTime)
-                import time
-                time.sleep(5)
+            
             elif unpacked_data[3].decode() == "M":  # End of Market hours
                 endTime = decodeTimestamp(unpacked_data[2])
                 print("Market closed at %d nanoseconds: " % endTime)
-                import time
-                time.sleep(5)
+
+            elif unpacked_data[3].decode() == "S": # Start of System Hours 
+                openTime = decodeTimestamp(unpacked_data[2])
+                print("System Started at %d nanoseconds: " % openTime)
+
+            elif unpacked_data[3].decode() == "E": # End of System Hours
+                endTime = decodeTimestamp(unpacked_data[2])
+                print("System Started at %d nanoseconds: " % endTime)
+
+            elif message_type == "O": # Start of Messages
+                openTime = decodeTimestamp(unpacked_data[2])
+                print("Start of Messages at %d nanoseconds: " % openTime)
+
+            elif message_type == "C": # End of Messages
+                openTime = decodeTimestamp(unpacked_data[2])
+                print("End of Messages at %d nanoseconds: " % openTime)
