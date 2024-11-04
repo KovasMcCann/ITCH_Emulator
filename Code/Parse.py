@@ -41,6 +41,13 @@ MarketCategory = { # For Stock Directory Messages
     " ": "Not Available"
 }
 
+Action = {
+    "H": "Trading Halted",
+    "P": "Trading Paused",
+    "Q": "Quotation Only Period",
+    "T": "Trading Resumed"
+}
+
 def decodeTimestamp(timestamp):
     # Given a 6 byte integer, returns an 8 bit unsigned long long
     new_bytes = struct.pack('>2s6s', b'\x00\x00', timestamp)  # Add padding bytes
@@ -78,41 +85,83 @@ with open(file, 'rb') as f:
 
         if message_type == "S": # System Event Messages
             unpacked_data = struct.unpack('>HH6sc', record)
-            print(unpacked_data)
+            #print(unpacked_data)
             if unpacked_data[3].decode() == "Q":  # Start of Market hours
                 openTime = decodeTimestamp(unpacked_data[2])
-                print(f"Market opened at {nanosecondsToTime(openTime)}")
+                print(f"{nanosecondsToTime(openTime)}: Market Opened")
 
             elif unpacked_data[3].decode() == "M":  # End of Market hours
                 endTime = decodeTimestamp(unpacked_data[2])
-                print(f"Market closed at {nanosecondsToTime(endTime)}")
+                print(f"{nanosecondsToTime(endTime)}: Market closed")
 
             elif unpacked_data[3].decode() == "S": # Start of System Hours 
                 openTime = decodeTimestamp(unpacked_data[2])
-                print(f"System Started at {nanosecondsToTime(openTime)}")
+                print(f"{nanosecondsToTime(openTime)}: System Started")
 
             elif unpacked_data[3].decode() == "E": # End of System Hours
                 endTime = decodeTimestamp(unpacked_data[2])
-                print(f"System Stopped at {nanosecondsToTime(endTime)}")
+                print(f"{nanosecondsToTime(endTime)}: System Stopped")
 
             elif unpacked_data[3].decode() == "O": # Start of Messages
                 openTime = decodeTimestamp(unpacked_data[2])
-                print(f"Start of Messages at {nanosecondsToTime(openTime)}")
+                print(f"{nanosecondsToTime(openTime)}: Start of Messages")
 
             elif unpacked_data[3].decode() == "C": # End of Messages
                 endTime = decodeTimestamp(unpacked_data[2])
-                print(f"End of Messages at {nanosecondsToTime(endTime)}")
+                print(f"{nanosecondsToTime(endTime)}: End of Messages")
 
         elif message_type == "R": # Stock Directory Messages
             data = struct.unpack('>HH6s8sccIcc2scccccIc', record)
             #print(data)
-            stockID = data[0]
-            # Converts to string, removes trailing spaces
+
+            locate = data[0]
+            tracker = data[1] #Always 0
+            timestamp = decodeTimestamp(data[2])
             ticker = data[3].decode().strip()
             market = MarketCategory[data[4].decode()]
-            print(f"Stock {stockID} added with ticker {ticker} for {market}")
+            status = data[5].decode()
+            lotSize = data[6]
+            restrictions = data[7].decode()
+            issueclass = data[8].decode()
+            issueSubType = data[9].decode()
+            authenticity = data[10].decode()
+            shortSaleThreshold = data[11].decode()
+            IPOflag = data[12].decode()
+            LULDRefPriceTier = data[13].decode()
+            ETPTier = data[14].decode()
+            ETPleverageFactor = data[15]
+            inverseIndicator = data[16].decode()
+
+            #print(f"{locate} {tracker} {nanosecondsToTime(timestamp)} {ticker} {market} {status} {lotSize} {restrictions} {issueclass} {issueSubType} {authenticity} {shortSaleThreshold} {IPOflag} {LULDRefPriceTier} {ETPTier} {ETPleverageFactor} {inverseIndicator}")
+
+            print(f"{nanosecondsToTime(timestamp)}: Stock {ticker} on {market} assigned {locate}")
             #stock_map[stockID] = ticker
-        """
+
+        if message_type == "H": # Stock Trading Action Messages
+            data = struct.unpack('>HH6s8scIc', record)
+            locate = data[0]
+            tracker = data[1]
+            timestamp = decodeTimestamp(data[2])
+            ticker = data[3].decode().strip()
+            #ticker = data[3]
+            tradingState = data[4].decode()
+            StateValuesSimple = Action[data[4].decode()]
+            reserved = data[5]
+            reason = data[6]
+            print(f"{nanosecondsToTime(timestamp)}: Stock {ticker} {StateValuesSimple}")
+
+        if message_type == "A": # Add Orders
+            data = struct.unpack('>HH6sQcI8sI', record)
+            locate = data[0]
+            tracker = data[1]
+            timestamp = decodeTimestamp(data[2])
+            orderRefNum = data[3]
+            buySell = data[4].decode()
+            shares = data[5]
+            stock = data[6].decode().strip()
+            price = data[7]
+
+            print(f"{nanosecondsToTime(timestamp)}: Order {orderRefNum} for {shares} shares of {stock} at {price} {buySell}")
+
         import time
-        time.sleep(0.1)
-        """
+        #time.sleep(0.01)
