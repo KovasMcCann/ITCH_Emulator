@@ -163,5 +163,17 @@ with open(file, 'rb') as f:
 
             print(f"{nanosecondsToTime(timestamp)}: Order {orderRefNum} for {shares} shares of {stock} at {price} {buySell}")
 
-        import time
-        #time.sleep(0.01)
+        if message_type == "F":
+            data = struct.unpack('>HH6sQcI8sI4s', record)
+            locate = data[0]
+            tracker = data[1]
+            timestamp = decodeTimestamp(data[2])
+            orderRefNum = data[3]
+            buySell = data[4].decode()
+            shares = data[5]
+            stock = data[6].decode().strip()
+            price = data[7]
+            attribution = data[8].decode().strip()
+
+            print(f"{nanosecondsToTime(timestamp)}: Order {orderRefNum} for {shares} shares of {stock} at {price} {buySell} with attribution {attribution}")
+            
