@@ -159,7 +159,7 @@ with open(file, 'rb') as f:
             buySell = data[4].decode()
             shares = data[5]
             stock = data[6].decode().strip()
-            price = data[7]
+            price = data[7] / (10 ** 4)
 
             print(f"{nanosecondsToTime(timestamp)}: Order {orderRefNum} for {shares} shares of {stock} at {price} {buySell}")
 
