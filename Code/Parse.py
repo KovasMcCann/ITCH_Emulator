@@ -104,8 +104,6 @@ with open(file, 'rb') as f:
                 print(f"End of Messages at {nanosecondsToTime(endTime)}")
 
         elif message_type == "R": # Stock Directory Messages
-
-
             data = struct.unpack('>HH6s8sccIcc2scccccIc', record)
             #print(data)
             stockID = data[0]
@@ -114,5 +112,7 @@ with open(file, 'rb') as f:
             market = MarketCategory[data[4].decode()]
             print(f"Stock {stockID} added with ticker {ticker} for {market}")
             #stock_map[stockID] = ticker
+        """
         import time
         time.sleep(0.1)
+        """
