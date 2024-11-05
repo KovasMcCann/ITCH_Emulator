@@ -48,6 +48,8 @@ Action = {
     "T": "Trading Resumed"
 }
 
+StockDirectory = {}
+
 def decodeTimestamp(timestamp):
     # Given a 6 byte integer, returns an 8 bit unsigned long long
     new_bytes = struct.pack('>2s6s', b'\x00\x00', timestamp)  # Add padding bytes
@@ -56,7 +58,6 @@ def decodeTimestamp(timestamp):
 
 def nanosecondsToTime(nanoseconds):
     return datetime.datetime.utcfromtimestamp(nanoseconds/1e9).strftime('%H:%M:%S')
-
 
 #file = '../Data/01302019.NASDAQ_ITCH50'
 
@@ -132,6 +133,8 @@ with open(file, 'rb') as f:
             ETPleverageFactor = data[15]
             inverseIndicator = data[16].decode()
 
+            StockDirectory[locate] = ticker
+
             #print(f"{locate} {tracker} {nanosecondsToTime(timestamp)} {ticker} {market} {status} {lotSize} {restrictions} {issueclass} {issueSubType} {authenticity} {shortSaleThreshold} {IPOflag} {LULDRefPriceTier} {ETPTier} {ETPleverageFactor} {inverseIndicator}")
 
             print(f"{nanosecondsToTime(timestamp)}: Stock {ticker} on {market} assigned {locate}")
@@ -172,8 +175,34 @@ with open(file, 'rb') as f:
             buySell = data[4].decode()
             shares = data[5]
             stock = data[6].decode().strip()
-            price = data[7]
+            price = data[7] / (10 ** 4)
             attribution = data[8].decode().strip()
 
             print(f"{nanosecondsToTime(timestamp)}: Order {orderRefNum} for {shares} shares of {stock} at {price} {buySell} with attribution {attribution}")
-            
+        
+        if message_type == "E":
+            data = struct.unpack('>HH6sQIQ', record)
+            locate = data[0]
+            tracker = data[1]
+            timestamp = decodeTimestamp(data[2])
+            orderRefNum = data[3]
+            execShares = data[4]
+            matchNum = data[5]
+
+            print(f"{nanosecondsToTime(timestamp)}: Order {orderRefNum} executed {execShares} shares with match number {matchNum}")
+        if message_type == "C":
+            data = struct.unpack('>HH6sQIQcI', record)
+            printable = data[6]
+            locate = data[0]
+            tracker = data[1]
+            timestamp = decodeTimestamp(data[2])
+            orderRefNum = data[3]
+            execShares = data[4]
+            matchNum = data[5]
+            printable = data[6]
+            price = data[7] / (10 ** 4) # 4 decimal points
+            timestamp = decodeTimestamp(data[2])
+
+            name = StockDirectory[locate]
+
+            print(f"{nanosecondsToTime(timestamp)}: Order Executed {orderRefNum} executed {execShares} shares for {name} at {price} {printable}") 
