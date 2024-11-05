@@ -40,6 +40,12 @@ def main(stdscr):
             win_height = height - 2  # Leave room for borders
             win_width = width // 2  # Split width for two windows
 
+            bottom_bar = curses.newwin(1, width, height - 1, 0)
+            bottom_bar.clear()
+            curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
+            bottom_bar.addstr(0, 0, f"Kovas McCann 2024: {time.ctime()}", curses.color_pair(2))
+            bottom_bar.refresh()
+
             # Create two windows, split evenly in width
             win1 = curses.newwin(win_height, win_width, 1, 1)  # Window 1
             win2 = curses.newwin(win_height, win_width, 1, win_width - 1)  # Window 2
