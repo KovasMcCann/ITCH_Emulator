@@ -140,7 +140,7 @@ with open(file, 'rb') as f:
             print(f"{nanosecondsToTime(timestamp)}: Stock {ticker} on {market} assigned {locate}")
             #stock_map[stockID] = ticker
 
-        if message_type == "H": # Stock Trading Action Messages
+        elif message_type == "H": # Stock Trading Action Messages
             data = struct.unpack('>HH6s8scIc', record)
             locate = data[0]
             tracker = data[1]
@@ -153,7 +153,7 @@ with open(file, 'rb') as f:
             reason = data[6]
             print(f"{nanosecondsToTime(timestamp)}: Stock {ticker} {StateValuesSimple}")
 
-        if message_type == "A": # Add Orders
+        elif message_type == "A": # Add Orders
             data = struct.unpack('>HH6sQcI8sI', record)
             locate = data[0]
             tracker = data[1]
@@ -166,7 +166,7 @@ with open(file, 'rb') as f:
 
             print(f"{nanosecondsToTime(timestamp)}: Order {orderRefNum} for {shares} shares of {stock} at {price} {buySell}")
 
-        if message_type == "F":
+        elif message_type == "F":
             data = struct.unpack('>HH6sQcI8sI4s', record)
             locate = data[0]
             tracker = data[1]
@@ -180,7 +180,7 @@ with open(file, 'rb') as f:
 
             print(f"{nanosecondsToTime(timestamp)}: Order {orderRefNum} for {shares} shares of {stock} at {price} {buySell} with attribution {attribution}")
         
-        if message_type == "E":
+        elif message_type == "E":
             data = struct.unpack('>HH6sQIQ', record)
             locate = data[0]
             tracker = data[1]
@@ -190,7 +190,7 @@ with open(file, 'rb') as f:
             matchNum = data[5]
 
             print(f"{nanosecondsToTime(timestamp)}: Order {orderRefNum} executed {execShares} shares with match number {matchNum}")
-        if message_type == "C":
+        elif message_type == "C":
             data = struct.unpack('>HH6sQIQcI', record)
             printable = data[6]
             locate = data[0]
