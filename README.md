@@ -1,3 +1,5 @@
+[Screen recording 2024-11-11 2.51.36 PM.webm](https://github.com/user-attachments/assets/a612829e-a5e0-4ce7-af3d-cf7475a3ac4f)
+
 # How to work with NASDAQ ITCH protocol
 
 ## Reciving Sample Data
