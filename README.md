@@ -2,7 +2,7 @@
 
 # How to work with NASDAQ ITCH protocol
 
-## Reciving Sample Data
+## Receiving Sample Data
 
 To receive **Free** sample data from NASDAQ use this [link](https://emi.nasdaq.com/ITCH/Nasdaq%20ITCH/).
 
@@ -93,7 +93,7 @@ The ITCH protocol has 11 main message types. The first byte of each message indi
    - The `StockDirectory` ensures stock locates are resolved to tickers for later messages.
 
 6. **Price Precision** 
-   - Prices are stored in **1/10,000 units** and converted to floating-point values. See [investopedia.com](https://www.investopedia.com/terms/d/decimalization.asp) for interesting information.
+   - Prices are stored in **1/10,000 units** and converted to floating-point values. See [link](https://www.investopedia.com/terms/d/decimalization.asp) for interesting information.
 
 7. **Scalability**
    - The `while` loop processes messages until EOF, making it suitable for large data streams.
